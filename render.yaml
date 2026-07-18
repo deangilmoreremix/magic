@@ -69,7 +69,7 @@ services:
       - key: SUPABASE_DB_CONNECTION_STRING
         sync: false
 
-  - type: worker
+  - type: pserv
     name: magic-service-daemon
     runtime: docker
     plan: standard
@@ -100,13 +100,13 @@ services:
       - key: AMQP_PASSWORD
         sync: false
 
-  - type: worker
+  - type: pserv
     name: magic-mysql
-    runtime: docker
+    runtime: image
     plan: standard
     region: oregon
-    arch: amd64
-    image: mysql:8.0
+    image:
+      url: mysql:8.0
     envVars:
       - key: MYSQL_ROOT_PASSWORD
         sync: false
@@ -127,13 +127,13 @@ services:
     region: oregon
     ipAllowList: []
 
-  - type: worker
+  - type: pserv
     name: magic-rabbitmq
-    runtime: docker
+    runtime: image
     plan: starter
     region: oregon
-    arch: amd64
-    image: rabbitmq:4.1-management-alpine
+    image:
+      url: rabbitmq:4.1-management-alpine
     envVars:
       - key: RABBITMQ_DEFAULT_USER
         value: admin
@@ -142,13 +142,13 @@ services:
       - key: RABBITMQ_DEFAULT_VHOST
         value: magic-chat
 
-  - type: worker
+  - type: pserv
     name: magic-qdrant
-    runtime: docker
+    runtime: image
     plan: starter
     region: oregon
-    arch: amd64
-    image: qdrant/qdrant:latest
+    image:
+      url: qdrant/qdrant:latest
     disk:
       name: magic-qdrant-data
       mountPath: /qdrant/storage
@@ -156,11 +156,11 @@ services:
 
   - type: web
     name: super-magic
-    runtime: docker
+    runtime: image
     plan: standard
     region: oregon
-    arch: amd64
-    image: ghcr.io/dtyq/super-magic:latest
+    image:
+      url: ghcr.io/dtyq/super-magic:latest
     port: 8002
     healthCheckPath: /health
     envVars:
@@ -177,11 +177,11 @@ services:
 
   - type: web
     name: magic-gateway
-    runtime: docker
+    runtime: image
     plan: starter
     region: oregon
-    arch: amd64
-    image: ghcr.io/dtyq/magic-gateway:latest
+    image:
+      url: ghcr.io/dtyq/magic-gateway:latest
     port: 8001
     envVars:
       - key: OPENAI_API_KEY
