@@ -97,5 +97,37 @@ SUPABASE_DB_CONNECTION_STRING=postgresql://postgres:***@db.bzxohkrxcwodllketcpz.
 - `volumes/` — persistent data mounts
 - `setup.sh` — idempotent prep script
 - `supabase-client.mjs` — external Supabase client + connectivity check
+- `render.yaml` — Render Blueprint: deploys the full stack (minus Sandbox Gateway) in the cloud
 
 All of the above are git-ignored where they contain secrets (see `.gitignore`).
+
+---
+
+## Deploy on Render (cloud, no local Docker needed)
+
+`render.yaml` is a Render **Blueprint** that creates the whole stack as cloud services. This is the
+easiest way to *see the running app* without a local Docker host.
+
+**What runs on Render:**
+- `magic-web` — Node SSR web service (public, port 8080)
+- `magic-service` — PHP/Swoole API (Docker web service, port 9501)
+- `magic-service-daemon` — cron/worker (Docker private service)
+- `magic-mysql` — `mysql:8.0` private service (Render has no managed MySQL)
+- `magic-redis` — managed Redis
+- `magic-rabbitmq` — `rabbitmq:4.1` private service
+- `magic-qdrant` — `qdrant/qdrant` private service
+- `super-magic` — agent service (Docker web service)
+- `magic-gateway` — gateway (Docker web service)
+
+**Not on Render:** Sandbox Gateway (needs a host Docker socket) — Super Magic runs without live
+code execution. OpenSearch is optional and not included.
+
+**Steps:**
+1. Push the repo to GitHub and connect it in Render as a Blueprint (it reads `render.yaml`).
+2. Set the env vars marked `CHANGE-ME` / `sync: false` (DB passwords, `OPENAI_API_KEY`, the public
+   `MAGIC_SERVICE_BASE_URL` / `MAGIC_SOCKET_BASE_URL` for `magic-web`).
+3. `magic-web` is the public entrypoint → open its `onrender.com` URL and log in with
+   `13812345678` / `letsmagic.ai`.
+
+> Netlify is **not** recommended as the first step: it can only host static files and cannot run
+> the PHP API / MySQL / Redis, so the app would not function. Use Render (or a Docker host) first.
