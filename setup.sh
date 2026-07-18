@@ -37,6 +37,16 @@ else
   echo "    config/config.yaml already exists, leaving it untouched"
 fi
 
+# 2b. Super Magic + gateway env files (full stack)
+for f in .env_super_magic .env_magic_gateway .env_sandbox_gateway; do
+  if [ ! -f "config/$f" ]; then
+    cp "config/$f.example" "config/$f"
+    echo "    created config/$f from example"
+  else
+    echo "    config/$f already exists, leaving it untouched"
+  fi
+done
+
 # 3. volumes tree
 mkdir -p \
   volumes/db/data \
@@ -62,8 +72,17 @@ else
 fi
 
 echo ""
-echo "==> Done. Next steps on a Docker 24+ host:"
-echo "    1. (optional) edit .env to add an LLM key for Super Magic"
+echo "==> Done. Full stack (core + Super Magic + gateways) is configured."
+echo ""
+echo "    The launcher (./bin/magic.sh) reads bin/use_super_magic to enable the"
+echo "    'super-magic', 'magic-gateway', and 'sandbox-gateway' profiles."
+echo "    If you did NOT run ./bin/magic.sh interactively yet, create the marker so"
+echo "    the profiles are included, OR just run ./bin/magic.sh start and answer"
+echo "    'Yes' when asked to install Super Magic:"
+echo "        echo ' --profile magic-gateway --profile sandbox-gateway' > bin/use_super_magic"
+echo ""
+echo "==> Next steps on a Docker 24+ host:"
+echo "    1. (optional) edit config/.env_super_magic to set a real OPENAI_API_KEY"
 echo "    2. ./bin/magic.sh start      # foreground"
 echo "       ./bin/magic.sh daemon     # background"
 echo "    3. Open http://localhost:8080  (login 13812345678 / letsmagic.ai)"

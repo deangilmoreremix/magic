@@ -18,17 +18,15 @@ This creates:
 - the `volumes/` directory tree mounted by `docker-compose.yaml`
 - the external `magic-sandbox-network` docker network
 
-## 2. (Optional) Enable Super Magic + LLM
+## 2. Super Magic + Gateways (full stack — enabled)
 
-To use the Super Magic agent features, give it an OpenAI-compatible model key:
+`setup.sh` already creates `config/.env_super_magic`, `config/.env_magic_gateway`, and
+`config/.env_sandbox_gateway` (from their `.example` files, with placeholder keys) and writes
+`bin/use_super_magic` so the launcher starts the `super-magic`, `magic-gateway`, and
+`sandbox-gateway` profiles.
 
-```bash
-cp config/.env_super_magic.example config/.env_super_magic
-# edit config/.env_super_magic and set OPENAI_API_KEY / OPENAI_API_BASE_URL
-```
-
-Then answer "Yes" to Super Magic when the launcher asks. The launcher automatically adds the
-`--profile magic-gateway --profile sandbox-gateway` profiles.
+To make Super Magic actually call a model, edit `config/.env_super_magic` and set a real
+`OPENAI_API_KEY` (and `OPENAI_API_BASE_URL` if not OpenAI).
 
 ## 3. Launch
 
@@ -40,7 +38,8 @@ Then answer "Yes" to Super Magic when the launcher asks. The launcher automatica
 ```
 
 On first run the launcher is interactive (language, Super Magic, local/remote deploy). It writes
-`bin/magic.lock` so later runs skip setup.
+`bin/magic.lock` so later runs skip setup. Because `bin/use_super_magic` exists, the full-stack
+profiles are included automatically.
 
 ## 4. Verify
 
@@ -49,11 +48,18 @@ On first run the launcher is interactive (language, Super Magic, local/remote de
 | Web app | http://localhost:8080 | `13812345678` / `letsmagic.ai` |
 | API | http://localhost:9501 | — |
 | RabbitMQ UI | http://localhost:15672 | `admin` / `magic123456` |
+| Super Magic | http://localhost:8002 | — |
+| Magic Gateway | http://localhost:8001 | — |
+| Sandbox Gateway | http://localhost:39003 | — |
 
 ```bash
 ./bin/magic.sh status
 curl -s http://localhost:9501/health        # expect 200 / JSON
 ```
+
+> **OpenSearch** is the only optional component not enabled — it is fully commented out in
+> `docker-compose.yaml`. Enable it by uncommenting the `opensearch` / `opensearch-dashboards`
+> services if you need full-text search.
 
 ---
 
