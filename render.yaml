@@ -16,14 +16,14 @@
 #   4. The web service is the public entrypoint (magic-web on :8080).
 
 services:
-  # ---------- Web (Node SSR server, public; built via Docker with workspace deps) ----------
+  # ---------- Web (Node SSR server, public; built via upstream Dockerfile) ----------
   - type: web
     name: magic-web
     runtime: docker
     plan: standard
     region: oregon
-    dockerContext: frontend
-    dockerfilePath: Dockerfile.render
+    dockerContext: frontend/magic-web
+    dockerfilePath: Dockerfile
     port: 8080
     envVars:
       - key: MAGIC_SERVICE_BASE_URL
@@ -42,7 +42,6 @@ services:
     rootDir: backend/magic-service
     dockerfilePath: ./Dockerfile
     port: 9501
-    healthCheckPath: /health
     envVars:
       - key: type
         value: main
