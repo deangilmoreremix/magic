@@ -1,22 +1,4 @@
-# Render Infrastructure-as-Code for the Magic monorepo.
-#
-# Deploys the full working stack EXCEPT the Sandbox Gateway, which needs a host
-# Docker socket (unavailable on Render). Super Magic planning/LLM calls still run;
-# only the code-execution sandbox is omitted.
-#
-# Magic's primary DB is MySQL (DB_DRIVER=mysql). Render has no managed MySQL, so we
-# deploy a mysql:8.0 private service. Your Supabase project remains the EXTERNAL app
-# Postgres (configured via SUPABASE_* in .env) and is untouched by this stack.
-#
-# Usage:
-#   1. Push this repo to GitHub and connect it in the Render dashboard ("Blueprint").
-#   2. Render reads this file and creates all services.
-#   3. Set the secrets below (or use Render's "Secret Files"/env groups). The values
-#      shown mirror .env; override the ones marked CHANGE-ME.
-#   4. The web service is the public entrypoint (magic-web on :8080).
-
 services:
-  # ---------- Web (Node SSR server, public; built via upstream Dockerfile) ----------
   - type: web
     name: magic-web
     runtime: docker
@@ -27,13 +9,12 @@ services:
     port: 8080
     envVars:
       - key: MAGIC_SERVICE_BASE_URL
-        sync: false   # set to your magic-service onrender.com URL, e.g. https://magic-service-xxx.onrender.com
+        sync: false
       - key: MAGIC_SOCKET_BASE_URL
-        sync: false   # set to wss://<magic-service>.onrender.com (websocket port 9502)
+        sync: false
       - key: MAGIC_EDITION
         value: open-source
 
-  # ---------- API (PHP/Swoole, Docker) ----------
   - type: web
     name: magic-service
     runtime: docker
@@ -50,25 +31,25 @@ services:
       - key: DB_DRIVER
         value: mysql
       - key: DB_HOST
-        value: magic-mysql   # internal hostname of the mysql service below
+        value: magic-mysql
       - key: DB_PORT
         value: "3306"
       - key: DB_USERNAME
         value: magic
       - key: DB_PASSWORD
-        sync: false          # CHANGE-ME (use a strong password, not the example)
+        sync: false
       - key: DB_DATABASE
         value: magic
       - key: REDIS_HOST
         value: magic-redis
       - key: REDIS_PASSWORD
-        sync: false          # CHANGE-ME
+        sync: false
       - key: AMQP_HOST
         value: magic-rabbitmq
       - key: AMQP_USER
         value: admin
       - key: AMQP_PASSWORD
-        sync: false          # CHANGE-ME
+        sync: false
       - key: AMQP_VHOST
         value: magic-chat
       - key: ODIN_QDRANT_BASE_URI
@@ -76,7 +57,7 @@ services:
       - key: ODIN_QDRANT_API_KEY
         sync: false
       - key: MAGIC_SERVICE_BASE_URL
-        sync: false          # set to this service's onrender.com URL
+        sync: false
       - key: FILE_DRIVER
         value: local
       - key: SUPABASE_URL
@@ -88,7 +69,6 @@ services:
       - key: SUPABASE_DB_CONNECTION_STRING
         sync: false
 
-  # ---------- Daemon / cron worker (Docker) ----------
   - type: worker
     name: magic-service-daemon
     runtime: docker
@@ -120,7 +100,6 @@ services:
       - key: AMQP_PASSWORD
         sync: false
 
-  # ---------- MySQL (Docker private service; Render has no managed MySQL) ----------
   - type: worker
     name: magic-mysql
     runtime: docker
@@ -130,11 +109,11 @@ services:
     dockerImage: mysql:8.0
     envVars:
       - key: MYSQL_ROOT_PASSWORD
-        sync: false          # CHANGE-ME
+        sync: false
       - key: MYSQL_USER
         value: magic
       - key: MYSQL_PASSWORD
-        sync: false          # CHANGE-ME (must match magic-service DB_PASSWORD)
+        sync: false
       - key: MYSQL_DATABASE
         value: magic
     disk:
@@ -142,14 +121,12 @@ services:
       mountPath: /var/lib/mysql
       sizeGB: 10
 
-  # ---------- Redis (managed) ----------
   - type: redis
     name: magic-redis
     plan: starter
     region: oregon
     ipAllowList: []
 
-  # ---------- RabbitMQ (Docker private service) ----------
   - type: worker
     name: magic-rabbitmq
     runtime: docker
@@ -161,11 +138,10 @@ services:
       - key: RABBITMQ_DEFAULT_USER
         value: admin
       - key: RABBITMQ_DEFAULT_PASS
-        sync: false          # CHANGE-ME (must match magic-service AMQP_PASSWORD)
+        sync: false
       - key: RABBITMQ_DEFAULT_VHOST
         value: magic-chat
 
-  # ---------- Qdrant (Docker private service) ----------
   - type: worker
     name: magic-qdrant
     runtime: docker
@@ -178,7 +154,6 @@ services:
       mountPath: /qdrant/storage
       sizeGB: 10
 
-  # ---------- Super Magic (Docker; code-exec sandbox omitted) ----------
   - type: web
     name: super-magic
     runtime: docker
@@ -190,7 +165,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
-        sync: false          # CHANGE-ME (real key so Super Magic can call a model)
+        sync: false
       - key: OPENAI_API_BASE_URL
         value: https://api.openai.com/v1
       - key: MAGIC_API_BASE_URL
@@ -200,7 +175,6 @@ services:
       - key: BROWSER_HEADLESS
         value: "True"
 
-  # ---------- Magic Gateway (Docker) ----------
   - type: web
     name: magic-gateway
     runtime: docker
@@ -218,6 +192,3 @@ services:
         sync: false
       - key: MAGIC_GATEWAY_PORT
         value: "8001"
-
-# NOTE: Sandbox Gateway is intentionally excluded — it requires mounting the host
-# Docker socket (unavailable on Render). Super Magic will run without live code exec.
