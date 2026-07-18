@@ -2,7 +2,7 @@ services:
   - type: web
     name: magic-web
     runtime: docker
-    plan: standard
+    plan: free
     region: oregon
     dockerContext: frontend/magic-web
     dockerfilePath: Dockerfile
@@ -17,7 +17,7 @@ services:
   - type: web
     name: magic-service
     runtime: docker
-    plan: standard
+    plan: starter
     region: oregon
     rootDir: backend/magic-service
     dockerfilePath: ./Dockerfile
@@ -68,40 +68,9 @@ services:
         sync: false
 
   - type: pserv
-    name: magic-service-daemon
-    runtime: docker
-    plan: standard
-    region: oregon
-    rootDir: backend/magic-service
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: type
-        value: daemon
-      - key: CRONTAB_ENABLE
-        value: "true"
-      - key: DB_HOST
-        value: magic-mysql
-      - key: DB_USERNAME
-        value: magic
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_DATABASE
-        value: magic
-      - key: REDIS_HOST
-        value: magic-redis
-      - key: REDIS_PASSWORD
-        sync: false
-      - key: AMQP_HOST
-        value: magic-rabbitmq
-      - key: AMQP_USER
-        value: admin
-      - key: AMQP_PASSWORD
-        sync: false
-
-  - type: pserv
     name: magic-mysql
     runtime: image
-    plan: standard
+    plan: starter
     region: oregon
     image:
       url: mysql:8.0
@@ -151,40 +120,3 @@ services:
       name: magic-qdrant-data
       mountPath: /qdrant/storage
       sizeGB: 10
-
-  - type: web
-    name: super-magic
-    runtime: image
-    plan: standard
-    region: oregon
-    image:
-      url: ghcr.io/dtyq/super-magic:latest
-    healthCheckPath: /health
-    envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: OPENAI_API_BASE_URL
-        value: https://api.openai.com/v1
-      - key: MAGIC_API_BASE_URL
-        value: http://magic-service:9501/v1
-      - key: QDRANT_COLLECTION_PREFIX
-        value: SUPERMAGIC-
-      - key: BROWSER_HEADLESS
-        value: "True"
-
-  - type: web
-    name: magic-gateway
-    runtime: image
-    plan: starter
-    region: oregon
-    image:
-      url: ghcr.io/dtyq/magic-gateway:latest
-    envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: MAGIC_API_BASE_URL
-        value: http://magic-service:9501/v1
-      - key: REDIS_PASSWORD
-        sync: false
-      - key: MAGIC_GATEWAY_PORT
-        value: "8001"
