@@ -1,0 +1,53 @@
+# Render build for magic-web.
+# The app depends on local workspace packages (@dtyq/magic-flow, @dtyq/upload-sdk,
+# @dtyq/es6-template-strings). Those must be built BEFORE magic-web. This Dockerfile
+# uses the whole frontend/ directory as its build context so the local packages
+# resolve, builds them in dependency order, then runs the SSR server on :8080.
+#
+# Render service config must set:
+#   dockerContext: frontend
+#   dockerfilePath: Dockerfile.render   (relative to frontend/)
+
+FROM node:18-alpine AS builder
+
+WORKDIR /build
+
+RUN npm install -g pnpm patch-package
+
+# Manifests first (better layer caching)
+COPY package.json ./package.json
+COPY magic-flow/package.json ./magic-flow/package.json
+COPY upload-sdk/package.json ./upload-sdk/package.json
+COPY es6-template-strings/package.json ./es6-template-strings/package.json
+COPY magic-ui/package.json ./magic-ui/package.json
+COPY magic-web/package.json ./magic-web/package.json
+
+WORKDIR /build/magic-web
+RUN pnpm install
+
+# Build local workspace dependencies first
+WORKDIR /build/es6-template-strings
+RUN pnpm build
+WORKDIR /build/upload-sdk
+RUN pnpm build
+WORKDIR /build/magic-flow
+RUN pnpm build
+
+# Build the web app
+WORKDIR /build/magic-web
+RUN pnpm build
+
+# ---- Runtime ----
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+COPY --from=builder /build/magic-web/dist ./dist
+COPY --from=builder /build/magic-web/server ./server
+COPY --from=builder /build/magic-web/server/package.json ./server/package.json
+
+WORKDIR /app/server
+RUN npm install --omit=dev
+
+EXPOSE 8080
+# server/app.cjs binds 0.0.0.0:8080 (PORT is hardcoded in the source to 8080)
+CMD ["node", "./app.cjs"]

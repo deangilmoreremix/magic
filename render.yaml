@@ -16,20 +16,16 @@
 #   4. The web service is the public entrypoint (magic-web on :8080).
 
 services:
-  # ---------- Web (Node SSR server, public) ----------
+  # ---------- Web (Node SSR server, public; built via Docker with workspace deps) ----------
   - type: web
     name: magic-web
-    runtime: node
-    plan: starter
+    runtime: docker
+    plan: standard
     region: oregon
-    rootDir: frontend/magic-web
-    buildCommand: |
-      npm install -g pnpm && pnpm install && pnpm build
-    startCommand: node ./server/app.cjs
+    dockerContext: frontend
+    dockerfilePath: Dockerfile.render
     port: 8080
     envVars:
-      - key: PORT
-        value: "8080"
       - key: MAGIC_SERVICE_BASE_URL
         sync: false   # set to your magic-service onrender.com URL, e.g. https://magic-service-xxx.onrender.com
       - key: MAGIC_SOCKET_BASE_URL
