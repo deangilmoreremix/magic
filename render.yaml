@@ -92,7 +92,7 @@ services:
         sync: false
 
   # ---------- Daemon / cron worker (Docker) ----------
-  - type: pservice
+  - type: worker
     name: magic-service-daemon
     runtime: docker
     plan: standard
@@ -124,7 +124,7 @@ services:
         sync: false
 
   # ---------- MySQL (Docker private service; Render has no managed MySQL) ----------
-  - type: pservice
+  - type: worker
     name: magic-mysql
     runtime: docker
     plan: standard
@@ -152,7 +152,7 @@ services:
     ipAllowList: []
 
   # ---------- RabbitMQ (Docker private service) ----------
-  - type: pservice
+  - type: worker
     name: magic-rabbitmq
     runtime: docker
     plan: starter
@@ -167,7 +167,7 @@ services:
         value: magic-chat
 
   # ---------- Qdrant (Docker private service) ----------
-  - type: pservice
+  - type: worker
     name: magic-qdrant
     runtime: docker
     plan: starter
