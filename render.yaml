@@ -6,7 +6,6 @@ services:
     region: oregon
     dockerContext: frontend/magic-web
     dockerfilePath: Dockerfile
-    port: 8080
     envVars:
       - key: MAGIC_SERVICE_BASE_URL
         sync: false
@@ -22,7 +21,6 @@ services:
     region: oregon
     rootDir: backend/magic-service
     dockerfilePath: ./Dockerfile
-    port: 9501
     envVars:
       - key: type
         value: main
@@ -161,7 +159,6 @@ services:
     region: oregon
     image:
       url: ghcr.io/dtyq/super-magic:latest
-    port: 8002
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
@@ -182,7 +179,6 @@ services:
     region: oregon
     image:
       url: ghcr.io/dtyq/magic-gateway:latest
-    port: 8001
     envVars:
       - key: OPENAI_API_KEY
         sync: false
